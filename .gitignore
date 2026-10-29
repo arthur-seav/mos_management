@@ -31,3 +31,15 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Local settings ###
+.env
+
+### Dashboard front end (built by frontend-maven-plugin) ###
+frontend/node/
+frontend/node_modules/
+frontend/dist/
+
+### Uploaded product pictures ###
+uploads/
+frontend/*.tsbuildinfo
