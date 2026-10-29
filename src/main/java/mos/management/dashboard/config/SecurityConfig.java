@@ -18,12 +18,13 @@ import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
-import org.springframework.security.oauth2.jwt.JwtValidators;
+import org.springframework.security.oauth2.jwt.JwtTimestampValidator;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
 import javax.crypto.SecretKey;
+import java.time.Clock;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 
@@ -78,12 +79,19 @@ public class SecurityConfig {
 
     /** Accepts only sign-in tokens; a password-reset ticket is not a session. */
     @Bean
-    JwtDecoder jwtDecoder(SecretKey jwtKey) {
+    JwtDecoder jwtDecoder(SecretKey jwtKey, Clock clock) {
         NimbusJwtDecoder decoder = NimbusJwtDecoder.withSecretKey(jwtKey).macAlgorithm(MacAlgorithm.HS256).build();
         OAuth2TokenValidator<Jwt> accessOnly = jwt -> ACCESS_TOKEN.equals(jwt.getClaimAsString("typ"))
                 ? OAuth2TokenValidatorResult.success()
                 : OAuth2TokenValidatorResult.failure(new OAuth2Error("invalid_token", "Not a sign-in token", null));
-        decoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(JwtValidators.createDefault(), accessOnly));
+        decoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(timestamps(clock), accessOnly));
         return decoder;
+    }
+
+    /** Expiry checked against the app clock (tests move it). */
+    public static JwtTimestampValidator timestamps(Clock clock) {
+        JwtTimestampValidator validator = new JwtTimestampValidator();
+        validator.setClock(clock);
+        return validator;
     }
 }

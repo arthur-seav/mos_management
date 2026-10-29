@@ -1,15 +1,25 @@
 import { createBrowserRouter } from 'react-router'
 
 import AppLayout from '@/components/layout/AppLayout'
-import OverviewPage from '@/pages/overview/OverviewPage'
+import RequireAuth from '@/components/common/RequireAuth'
+import ChangePasswordPage from '@/pages/account/ChangePasswordPage'
+import LoginPage from '@/pages/auth/LoginPage'
 import NotFoundPage from '@/pages/NotFoundPage'
+import OverviewPage from '@/pages/overview/OverviewPage'
 
 export const router = createBrowserRouter([
+  { path: '/login', element: <LoginPage /> },
   {
-    element: <AppLayout />,
+    element: <RequireAuth />,
     children: [
-      { index: true, element: <OverviewPage /> },
-      { path: '*', element: <NotFoundPage /> }
+      {
+        element: <AppLayout />,
+        children: [
+          { index: true, element: <OverviewPage /> },
+          { path: 'account/password', element: <ChangePasswordPage /> },
+          { path: '*', element: <NotFoundPage /> }
+        ]
+      }
     ]
   }
 ])

@@ -17,6 +17,7 @@
     <properties>
         <java.version>25</java.version>
         <poi.version>5.5.1</poi.version>
+        <libphonenumber.version>9.0.42</libphonenumber.version>
         <frontend-maven-plugin.version>2.0.2</frontend-maven-plugin.version>
         <!-- Node is downloaded into frontend/node/ by the build; no system Node needed. -->
         <node.version>v24.22.2</node.version>
@@ -71,6 +72,13 @@
             <groupId>org.apache.poi</groupId>
             <artifactId>poi-ooxml</artifactId>
             <version>${poi.version}</version>
+        </dependency>
+
+        <!-- Phone numbers: same normalisation as the app (Google's libphonenumber) -->
+        <dependency>
+            <groupId>com.googlecode.libphonenumber</groupId>
+            <artifactId>libphonenumber</artifactId>
+            <version>${libphonenumber.version}</version>
         </dependency>
 
         <!-- Tests: real PostgreSQL in Docker via Testcontainers -->
