@@ -1,0 +1,8 @@
+# Entry Caddyfile for the SKU-Fashion Caddy container once it also serves MOS.
+# compose.override.yaml mounts it over /etc/caddy/Caddyfile.
+#
+# 1. SKU's own Caddyfile, unchanged (its global `email` block comes first, so
+#    the ACME email and ZeroSSL fallback apply to both sites).
+# 2. The MOS site.
+import /etc/caddy/sku.Caddyfile
+import /etc/caddy/mos.Caddyfile

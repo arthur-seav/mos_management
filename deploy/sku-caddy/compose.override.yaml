@@ -1,0 +1,26 @@
+# Copy to /srv/sku-fashion/compose.override.yaml on the VPS (docker compose
+# reads it automatically next to compose.yaml). It is not part of the SKU repo.
+#
+# Lets SKU-Fashion's Caddy container also serve MOS:
+# - its entry Caddyfile becomes deploy/sku-caddy/Caddyfile from the MOS clone,
+#   which imports SKU's own Caddyfile (mounted under a new name) and the MOS site;
+# - MOS_DOMAIN is mos.<SKU's SITE_DOMAIN>, so SKU's .env needs no change;
+# - Caddy joins the external `edge` network to reach `mos-app` (only the MOS app
+#   container is on it, never either database).
+#
+# Remove this file (and run `docker compose up -d caddy`) to go back to SKU only.
+services:
+  caddy:
+    environment:
+      MOS_DOMAIN: mos.${SITE_DOMAIN:?set SITE_DOMAIN in .env}
+    volumes:
+      - /srv/mos/deploy/sku-caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./deploy/Caddyfile:/etc/caddy/sku.Caddyfile:ro
+      - /srv/mos/deploy/Caddyfile.mos:/etc/caddy/mos.Caddyfile:ro
+    networks:
+      - default
+      - edge
+
+networks:
+  edge:
+    external: true

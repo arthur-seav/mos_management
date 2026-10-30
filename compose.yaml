@@ -1,0 +1,54 @@
+# Production stack for the VPS. See deploy/README.md.
+# No public ports here: the HTTPS proxy is the SKU-Fashion Caddy container, which
+# reaches `app` as `mos-app:8080` over the external `edge` network. The database
+# stays on this project's own network. 8035 is bound to 127.0.0.1 for debugging
+# from the server only (Docker-published ports bypass ufw).
+name: mos
+
+services:
+  db:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: mos
+      POSTGRES_USER: mos
+      POSTGRES_PASSWORD: ${MOS_DB_PASSWORD:?set MOS_DB_PASSWORD in .env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mos -d mos"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  app:
+    build: .
+    image: mos-app
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      MOS_DB_URL: jdbc:postgresql://db:5432/mos
+      MOS_DB_USER: mos
+      # Trust X-Forwarded-* from Caddy (scheme and client address).
+      SERVER_FORWARD_HEADERS_STRATEGY: native
+    mem_limit: 768m
+    ports:
+      - "127.0.0.1:8035:8080"
+    volumes:
+      - uploads:/app/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      default: {}
+      edge:
+        aliases:
+          - mos-app
+
+networks:
+  edge:
+    external: true
+
+volumes:
+  pgdata:
+  uploads:
