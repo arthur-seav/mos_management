@@ -5,6 +5,7 @@ import mos.management.dashboard.dto.MenuDtos.MenuView;
 import mos.management.dashboard.dto.MenuDtos.ProductView;
 import mos.management.dashboard.dto.StoreDtos.StoreInfoView;
 import mos.management.dashboard.service.menu.MenuQueryService;
+import mos.management.dashboard.service.report.ReportService;
 import mos.management.dashboard.service.store.StoreService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -24,15 +25,23 @@ public class AppMenuController {
 
     private final MenuQueryService menu;
     private final StoreService store;
+    private final ReportService reports;
 
-    public AppMenuController(MenuQueryService menu, StoreService store) {
+    public AppMenuController(MenuQueryService menu, StoreService store, ReportService reports) {
         this.menu = menu;
         this.store = store;
+        this.reports = reports;
     }
 
     @GetMapping("/menu")
     public MenuView menu() {
         return menu.menu();
+    }
+
+    /** "Popular now" on Home: best sellers of the last 30 days (FR-35 data), then the menu order. */
+    @GetMapping("/menu/popular")
+    public List<ProductView> popular(@RequestParam(defaultValue = "6") int limit) {
+        return reports.popular(limit).stream().map(ProductView::of).toList();
     }
 
     @GetMapping("/menu/products/{id}/customization")

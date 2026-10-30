@@ -1,6 +1,6 @@
 import { Briefcase, Package } from 'lucide-react'
 
-import { isActivePath, visibleGroups } from '@/components/layout/AppSidebar'
+import { activeHref, isActivePath, visibleGroups } from '@/components/layout/AppSidebar'
 import type { NavGroup } from '@/config/nav'
 
 const groups: NavGroup[] = [
@@ -30,5 +30,23 @@ describe('isActivePath', () => {
     expect(isActivePath('/menu/products', '/menu/productsx')).toBe(false)
     expect(isActivePath('/', '/orders')).toBe(false)
     expect(isActivePath('/', '/')).toBe(true)
+  })
+})
+
+describe('activeHref', () => {
+  const nested: NavGroup[] = [
+    {
+      label: 'Orders',
+      items: [
+        { label: 'Queue', href: '/orders/queue', icon: Package },
+        { label: 'Records', href: '/orders', icon: Package }
+      ]
+    }
+  ]
+
+  it('highlights only the most specific entry', () => {
+    expect(activeHref(nested, '/orders/queue')).toBe('/orders/queue')
+    expect(activeHref(nested, '/orders')).toBe('/orders')
+    expect(activeHref(nested, '/menu')).toBeNull()
   })
 })

@@ -1,0 +1,2 @@
+org.springframework.boot.EnvironmentPostProcessor=\
+mos.management.dashboard.config.UtcTimeZone

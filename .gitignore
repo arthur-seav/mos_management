@@ -34,6 +34,7 @@ build/
 
 ### Local settings ###
 .env
+.postgres.env
 
 ### Dashboard front end (built by frontend-maven-plugin) ###
 frontend/node/

@@ -26,9 +26,22 @@ export function isActivePath(href: string, pathname: string): boolean {
   return pathname === href || pathname.startsWith(href + '/')
 }
 
+/** The one entry to highlight: the longest href that matches ("/orders/queue" wins over "/orders"). */
+export function activeHref(groups: NavGroup[], pathname: string): string | null {
+  let best: string | null = null
+  for (const g of groups) {
+    for (const i of g.items) {
+      if (isActivePath(i.href, pathname) && (!best || i.href.length > best.length)) best = i.href
+    }
+  }
+  return best
+}
+
 /** AdminCN's sidebar layout: brand header, uppercase group labels, icon rows. */
 export default function AppSidebar({ role }: { role: Role }) {
   const { pathname } = useLocation()
+  const groups = visibleGroups(navGroups, role)
+  const active = activeHref(groups, pathname)
 
   return (
     <Sidebar collapsible='icon'>
@@ -46,7 +59,7 @@ export default function AppSidebar({ role }: { role: Role }) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        {visibleGroups(navGroups, role).map(group => (
+        {groups.map(group => (
           <SidebarGroup key={group.label}>
             <SidebarGroupLabel className='text-sidebar-foreground/50 tracking-wider uppercase'>
               {group.label}
@@ -57,7 +70,7 @@ export default function AppSidebar({ role }: { role: Role }) {
                   <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton
                       tooltip={item.label}
-                      isActive={isActivePath(item.href, pathname)}
+                      isActive={item.href === active}
                       className='data-active:bg-sidebar-accent! data-active:font-medium'
                       render={<NavLink to={item.href} />}
                     >
