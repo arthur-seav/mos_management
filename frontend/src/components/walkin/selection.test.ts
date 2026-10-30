@@ -171,6 +171,10 @@ describe('labels on the ticket', () => {
 })
 
 describe('prices on the option buttons', () => {
+  it('shows the charge even when all optional add-ons cost the same', () => {
+    const group = { ...addOnsGroup, options: addOnsGroup.options.map(o => ({ ...o, extraPrice: 0.6 })) }
+    expect(priceLabel(group, group.options[0], hot)).toBe('+$0.60')
+  })
   it('a single group shows the difference from the current choice', () => {
     expect(priceLabel(sizeGroup, sizeGroup.options[0], hot)).toBe('-$0.50')
     expect(priceLabel(sizeGroup, sizeGroup.options[1], hot)).toBe('+$0.00')
@@ -192,6 +196,10 @@ describe('prices on the option buttons', () => {
 })
 
 describe('cash at the counter (FR-39, BR-13)', () => {
+  it('blocks nonblank invalid cash instead of treating it as skipped', () => {
+    expect(cashState(9.2, '-5').short).toBe(true)
+    expect(cashState(9.2, 'oops').short).toBe(true)
+  })
   it('leaves the change blank while the box is empty', () => {
     expect(parseCash('  ')).toBeNull()
     expect(cashState(9.2, '')).toEqual({ cash: null, change: null, short: false })

@@ -126,7 +126,7 @@ function Body({
                       : 'Optional'}
                 </span>
               </legend>
-              <div className='flex flex-wrap gap-2'>
+              <div className={cn('flex gap-2', group.selectionType === 'single' && group.options.length <= 4 && new Set(group.options.map(o => o.extraPrice)).size > 1 ? 'flex-nowrap [&>button]:min-w-0 [&>button]:flex-1 [&>button]:flex-col' : 'flex-wrap')}>
                 {group.options.map(option => {
                   const on = picked.includes(option.id)
                   const price = priceLabel(group, option, selection)

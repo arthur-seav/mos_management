@@ -173,8 +173,8 @@ export function priceLabel(
   selection: Selection
 ): string | null {
   const prices = group.options.map(o => o.extraPrice)
+  if (group.selectionType === 'multiple') return option.extraPrice === 0 ? null : moneySigned(option.extraPrice)
   if (prices.every(p => p === prices[0])) return null
-  if (group.selectionType === 'multiple') return moneySigned(option.extraPrice)
   const current = group.options.find(o => chosenIds(selection, group).includes(o.id))
   return moneySigned(round2(option.extraPrice - (current?.extraPrice ?? 0)))
 }
@@ -222,7 +222,7 @@ export function parseCash(text: string): number | null {
 /** FR-39: what to show under the cash box. `short` blocks the order like the server does. */
 export function cashState(total: number, text: string): { cash: number | null; change: number | null; short: boolean } {
   const cash = parseCash(text)
-  if (cash === null) return { cash: null, change: null, short: false }
+  if (cash === null) return { cash: null, change: null, short: text.trim() !== '' }
   return { cash, change: round2(cash - total), short: cash < total }
 }
 
