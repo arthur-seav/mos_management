@@ -95,6 +95,15 @@ public class Order {
         payments.add(payment);
     }
 
+    /** BR-08: a walk-in order starts at Confirmed, placed and confirmed at once. */
+    public void startAsWalkIn(Instant now) {
+        if (source != OrderSource.WALK_IN || status != OrderStatus.CONFIRMED) {
+            throw new IllegalStateException("Only a new walk-in order starts at Confirmed");
+        }
+        placedAt = now;
+        confirmedAt = now;
+    }
+
     /**
      * BR-08: moves the order and stamps the matching time. Only forward
      * moves, and early endings from the states SA allows, are accepted.
