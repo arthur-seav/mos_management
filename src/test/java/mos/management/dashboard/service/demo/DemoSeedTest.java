@@ -52,9 +52,27 @@ class DemoSeedTest extends ApiTest {
     @Test
     void repeatSeedRefusesWithoutChangingAnything() {
         seed.seed(PASSWORD, PASSWORD);
-        assertThatThrownBy(() -> seed.seed(PASSWORD, PASSWORD)).isInstanceOf(IllegalStateException.class).hasMessageContaining("empty database");
+        assertThatThrownBy(() -> seed.seed(PASSWORD, PASSWORD)).isInstanceOf(IllegalStateException.class).hasMessageContaining("already has a menu");
         assertThat(menu.products()).hasSize(18);
         assertThat(users.count()).isEqualTo(2);
+    }
+
+    /** A dev database that already has the admin but no menu: keep the admin, add menu and staff. */
+    @Test
+    void existingAdminIsKeptAndOnlyMissingPiecesAreAdded() throws Exception {
+        seed.seed(PASSWORD, PASSWORD);
+        var admin = users.findByEmailIgnoreCase("admin@mos.test").orElseThrow();
+        String adminHash = admin.getPasswordHash();
+        // Simulate "admin exists, no menu, no staff".
+        jdbc.execute("DELETE FROM product_options; DELETE FROM product_option_groups; DELETE FROM options; "
+                + "DELETE FROM option_groups; DELETE FROM products; DELETE FROM categories; DELETE FROM users WHERE email = 'staff@mos.test'");
+        seed.seed(null, PASSWORD + "-staff");   // no admin password needed: the admin already exists
+        assertThat(menu.products()).hasSize(18);
+        assertThat(users.findByEmailIgnoreCase("admin@mos.test").orElseThrow().getPasswordHash()).isEqualTo(adminHash);
+        mvc.perform(postJson("/api/admin/auth/sign-in", "{\"identifier\":\"staff@mos.test\",\"password\":\"" + PASSWORD + "-staff\"}"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.user.role").value("staff"));
+        mvc.perform(postJson("/api/admin/auth/sign-in", "{\"identifier\":\"admin@mos.test\",\"password\":\"" + PASSWORD + "\"}"))
+                .andExpect(status().isOk());
     }
 
     @Test

@@ -42,7 +42,7 @@ Open <http://localhost:8080>. Demo users use fictional names:
 
 Open your private `.env` locally to obtain the generated passwords (`MOS_DEMO_ADMIN_PASSWORD` / `MOS_DEMO_STAFF_PASSWORD`). They are never printed by the helper or seed. Do not commit or paste either private environment file.
 
-The opt-in seed calls the normal account/menu/option services. It creates 4 categories, 18 drinks (one inactive), 6 option groups and 21 options, with the Flutter mock's names, prices and defaults. It creates no fabricated sales history. Repeating the seed refuses to overwrite a database that already contains users or categories. Normal startup does **not** seed accounts or menu data:
+The opt-in seed calls the normal account/menu/option services. It creates 4 categories, 18 drinks (one inactive), 6 option groups and 21 options, with the Flutter mock's names, prices and defaults. It creates no fabricated sales history. It works on a database that has **no menu yet**: each demo account is created only if its email is missing (an existing account and its password are left alone, so only the missing account's password variable is needed). A database that already has a menu is refused unchanged. Normal startup does **not** seed accounts or menu data:
 
 ```bash
 java -jar target/dashboard-0.0.1-SNAPSHOT.jar
@@ -51,6 +51,17 @@ java -jar target/dashboard-0.0.1-SNAPSHOT.jar --server.port=8092
 ```
 
 If you already have `.env`, keep it. Set the required variables using `.env.example` as a reference and prepare a matching database yourself rather than running the configuration helper. Changing an env file does not reset the password of an existing PostgreSQL volume or an already seeded user.
+
+### Schema and seed as SQL files
+
+`database/schema.sql` (the 14 tables) and `database/seed.sql` (demo menu, options, per-drink prices, store settings and opening hours; **no user accounts**, so no password hashes in git) are generated from Flyway V1 plus the demo seed. Flyway stays the source of truth: the app builds its own schema, so you only need these files to read the design, hand it in, or load a database by hand:
+
+```bash
+psql -v ON_ERROR_STOP=1 -d <empty database> -f database/schema.sql
+psql -v ON_ERROR_STOP=1 -d <same database> -f database/seed.sql
+```
+
+They use plain `INSERT`s (pgAdmin's Query Tool can run them) and avoid PostgreSQL-17-only statements. A database loaded this way has no Flyway history, so point the app at a Flyway-built database instead. Regenerate after changing a migration or `demo/menu.json` (needs Docker and `./mvnw package`): `python3 scripts/export-sql.py`. The script builds a throwaway database, dumps it, re-imports both files as a non-superuser to prove they load, then drops everything it created.
 
 ### Configuration
 
