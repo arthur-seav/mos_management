@@ -32,7 +32,7 @@ export default function OrderQueuePage() {
   const [confirmPause, setConfirmPause] = useState(false)
   const seen = useRef<ReadonlySet<number> | null>(null)
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, error } = useQuery({
     queryKey: QUEUE_KEY,
     queryFn: () => api.get<Queue>('/api/admin/orders/queue'),
     refetchInterval: 3000
@@ -86,7 +86,7 @@ export default function OrderQueuePage() {
             </span>
             <Button
               variant={open ? 'outline' : 'default'}
-              disabled={onlineOrdering.isPending}
+              disabled={onlineOrdering.isPending || !data}
               onClick={() => (open ? setConfirmPause(true) : onlineOrdering.mutate(true))}
             >
               {open ? 'Pause online orders' : 'Resume online orders'}
@@ -94,6 +94,7 @@ export default function OrderQueuePage() {
           </>
         }
       />
+      {error && <p role='alert' className='text-destructive mb-4'>Queue could not refresh: {errorMessage(error)} Do not treat this as an empty queue.</p>}
       {isLoading && <p className='sr-only'>Loading orders</p>}
       <div className='grid items-start gap-4 md:grid-cols-2 xl:grid-cols-4'>
         {QUEUE_COLUMNS.map(column => {

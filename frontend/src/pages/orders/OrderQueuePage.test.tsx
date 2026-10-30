@@ -4,7 +4,7 @@ import { toast } from 'sonner'
 
 import { makeItem, makeLine, makeOrder, SERVER_TIME } from '@/components/queue/test-orders'
 import OrderQueuePage from '@/pages/orders/OrderQueuePage'
-import { fakeApi, renderPage } from '@/test/render'
+import { apiError, fakeApi, renderPage } from '@/test/render'
 import type { Queue, StoreInfo } from '@/lib/types'
 
 // The dashboard's <Toaster /> lives in App, so toasts are checked on the sonner API.
@@ -77,6 +77,13 @@ beforeEach(() => vi.clearAllMocks())
 afterEach(() => vi.unstubAllGlobals())
 
 describe('OrderQueuePage (FR-19..FR-21)', () => {
+  it('shows a failed poll instead of silently presenting an empty queue', async () => {
+    fakeApi({ [`GET ${QUEUE_PATH}`]: () => apiError(503, 'unavailable', 'Store server is offline.') })
+    renderPage(<OrderQueuePage />)
+    expect(await screen.findByRole('alert')).toHaveTextContent('Store server is offline.')
+    expect(screen.getByRole('button', { name: 'Pause online orders' })).toBeDisabled()
+  })
+
   it('puts every order in its column, in the order the server sent (BR-11)', async () => {
     fakeApi({ [`GET ${QUEUE_PATH}`]: queue })
     renderPage(<OrderQueuePage />, { path: '/orders/queue' })
