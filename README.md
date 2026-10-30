@@ -145,6 +145,15 @@ scripts/           Local configuration and real HTTP smoke test
 
 The dashboard polls the queue every 3 seconds and plays a notification sound for newly placed orders (the browser may require a user gesture before audio is available). The backend checks stale pending-payment orders every minute and marks unpaid orders older than 30 minutes abandoned. Ready orders beyond their pickup grace period are highlighted for staff; completion remains manual.
 
+## Deployment
+
+The VPS demo runs with Docker Compose behind the SKU-Fashion Caddy container
+(`https://mos.202-61-200-81.sslip.io`): `Dockerfile`, `compose.yaml`,
+`.env.production.example` and `deploy/`. Steps, update and teardown are in
+[deploy/README.md](deploy/README.md). The demo data is loaded once with
+`--mos.demo.seed=true --spring.main.web-application-type=none`, which seeds and
+exits (no web server, no background jobs).
+
 ## API and permissions
 
 [API.md](API.md) lists endpoints, authentication, request examples and integration rules. Staff can operate orders/payments, switch sold-out state and pause online ordering. Admin-only API methods separately enforce menu/option editing, account management, sales reports and store-setting writes. Hiding a menu item is not the security boundary. Customers can only access their own orders, payments and cards.

@@ -2,6 +2,7 @@ package mos.management.dashboard.config;
 
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import mos.management.dashboard.service.auth.ActiveUserJwtConverter;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -48,7 +49,10 @@ public class SecurityConfig {
     /** The "typ" claim of a normal sign-in token (reset tickets use another). */
     public static final String ACCESS_TOKEN = "access";
 
+    // Not in the one-off seed command (--spring.main.web-application-type=none),
+    // which has no HTTP layer; PasswordEncoder and the JWT beans below stay available.
     @Bean
+    @ConditionalOnWebApplication
     SecurityFilterChain api(HttpSecurity http, ActiveUserJwtConverter converter) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())   // bearer tokens only, no cookies

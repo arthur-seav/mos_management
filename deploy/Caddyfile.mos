@@ -1,0 +1,15 @@
+# The MOS site, imported by deploy/sku-caddy/Caddyfile into the SKU-Fashion
+# Caddy container. MOS_DOMAIN comes from that container's environment
+# (compose.override.yaml sets it to mos.<SKU's SITE_DOMAIN>).
+{$MOS_DOMAIN} {
+	encode zstd gzip
+
+	# Product pictures are capped at 5 MB by Spring; leave room for the form.
+	request_body {
+		max_size 6MB
+	}
+
+	# Dashboard, /api/admin, /api/app, /uploads and /demo-images are all served
+	# by Spring Boot in the MOS `app` container, reached over the `edge` network.
+	reverse_proxy mos-app:8080
+}
