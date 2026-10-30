@@ -52,6 +52,15 @@ class AdminStoreApiTest extends ApiTest {
     }
 
     @Test
+    void openingHoursComeBackFromTheDatabaseUnshifted() throws Exception {
+        // Seeded 07:00-21:00. A JVM outside UTC once read these back as 14:00-04:00 (see UtcTimeZone).
+        mvc.perform(get("/api/app/store"))
+                .andExpect(jsonPath("$.hours[4].openTime").value("07:00:00"))
+                .andExpect(jsonPath("$.hours[4].closeTime").value("21:00:00"))
+                .andExpect(jsonPath("$.isOpenNow").value(true));   // Thursday 10:00 in Phnom Penh
+    }
+
+    @Test
     void closingBeforeOpeningIsRefused() throws Exception {
         mvc.perform(putAs(admin, "/api/admin/store/hours",
                         week("{\"dayOfWeek\": 0, \"openTime\": \"18:00\", \"closeTime\": \"09:00\"}")))
