@@ -2,7 +2,7 @@
 
 Spring Boot API and React store dashboard for the MOS coffee-shop coursework (SV34 Mobile Application II, SA 2.0). Staff handle online and walk-in orders; admins also manage the menu, options, accounts, reports and store settings. The same back end exposes `/api/app` for the separate Flutter customer app.
 
-**Scope:** the dashboard calls the real API. The Flutter repository has not yet been switched from its mock repositories to this API. Payments and password recovery are demonstrations, not production integrations.
+**Scope:** the dashboard calls the real API. The Flutter customer app (`arthur-seav/mos_flutter`, branch `feature/api-integration`) calls `/api/app` by default; orders placed in the app appear in the dashboard queue and status changes made there reach the app. Payments and password recovery are demonstrations, not production integrations.
 
 ## Requirements
 
@@ -42,7 +42,7 @@ Open <http://localhost:8080>. Demo users use fictional names:
 
 Open your private `.env` locally to obtain the generated passwords (`MOS_DEMO_ADMIN_PASSWORD` / `MOS_DEMO_STAFF_PASSWORD`). They are never printed by the helper or seed. Do not commit or paste either private environment file.
 
-The opt-in seed calls the normal account/menu/option services. It creates 4 categories, 18 drinks (one inactive), 6 option groups and 21 options, with the Flutter mock's names, prices and defaults. It creates no fabricated sales history. Repeating the seed refuses to overwrite a database that already contains users or categories. Normal startup does **not** seed accounts or menu data:
+The opt-in seed calls the normal account/menu/option services. It creates 4 categories, 18 drinks (one inactive), 6 option groups and 21 options, with the Flutter mock's names, prices and defaults. It creates no fabricated sales history. It works on a database that has **no menu yet**: each demo account is created only if its email is missing (an existing account and its password are left alone, so only the missing account's password variable is needed). A database that already has a menu is refused unchanged. Normal startup does **not** seed accounts or menu data:
 
 ```bash
 java -jar target/dashboard-0.0.1-SNAPSHOT.jar
@@ -51,6 +51,17 @@ java -jar target/dashboard-0.0.1-SNAPSHOT.jar --server.port=8092
 ```
 
 If you already have `.env`, keep it. Set the required variables using `.env.example` as a reference and prepare a matching database yourself rather than running the configuration helper. Changing an env file does not reset the password of an existing PostgreSQL volume or an already seeded user.
+
+### Schema and seed as SQL files
+
+`database/schema.sql` (the 14 tables) and `database/seed.sql` (demo menu, options, per-drink prices, store settings and opening hours; **no user accounts**, so no password hashes in git) are generated from Flyway V1 plus the demo seed. Flyway stays the source of truth: the app builds its own schema, so you only need these files to read the design, hand it in, or load a database by hand:
+
+```bash
+psql -v ON_ERROR_STOP=1 -d <empty database> -f database/schema.sql
+psql -v ON_ERROR_STOP=1 -d <same database> -f database/seed.sql
+```
+
+They use plain `INSERT`s (pgAdmin's Query Tool can run them) and avoid PostgreSQL-17-only statements. A database loaded this way has no Flyway history, so point the app at a Flyway-built database instead. Regenerate after changing a migration or `demo/menu.json` (needs Docker and `./mvnw package`): `python3 scripts/export-sql.py`. The script builds a throwaway database, dumps it, re-imports both files as a non-superuser to prove they load, then drops everything it created.
 
 ### Configuration
 
@@ -142,7 +153,7 @@ AdminCN's MIT component notice is preserved in `frontend/src/components/ui/LICEN
 
 - **No live banking:** `SimulatedPaymentGateway` is the only implementation, regardless of `MOS_DEMO`. KHQR succeeds after roughly 5 seconds when polled and expires after 5 minutes. Cards ending in `0002` are declined. Never scan/pay the demo payload or submit real card data. Refund marking records a staff action; it does not transfer money.
 - **Password recovery is demo-only:** phone matching issues a reset ticket without SMS/OTP or verified delivery. It is unsafe for an Internet-facing account system. Real recovery, rate limiting and a payment-provider integration are required before production use.
-- **Flutter is not connected yet:** the API has been exercised through real HTTP; the Flutter app still needs `Api*Repository` implementations and device/network testing. Cross-origin browser hosting is not configured; the dashboard is intended to share the Spring Boot origin.
+- **Flutter integration:** done for the Flutter web build and the API (see VERIFICATION.md, "Cross-end with the Flutter app"). Not yet run on an Android emulator or phone by Hermes (no Android SDK on that machine): the emulator uses `http://10.0.2.2:8080`, a phone `--dart-define=MOS_API_URL=http://<LAN IP>:8080`. Cross-origin calls to `/api/app/**` are allowed from `localhost`/`127.0.0.1` only (`MOS_CORS_APP_ORIGINS` to add a hosted Flutter web origin).
 - **BR-07:** backend default scheduled lead time is 30 minutes. The settings accept 0–240 and warn below 30; the Flutter mock currently uses 5. Whether to enforce a hard 30-minute minimum or retain an intentional deviation needs Arthur's decision. Current seed stays at 30.
 - **BR-10 / FR-33:** cancelling/rejecting a paid order automatically marks `refund_pending`; staff mark the actual refund `refunded` afterward.
 - **BR-12:** overdue Ready orders are highlighted, never automatically completed.

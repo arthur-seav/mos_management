@@ -22,11 +22,15 @@ import org.springframework.security.oauth2.jwt.JwtTimestampValidator;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import javax.crypto.SecretKey;
 import java.time.Clock;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 /**
  * Stateless JWT sign-in for both clients (NFR-06).
@@ -48,6 +52,7 @@ public class SecurityConfig {
     SecurityFilterChain api(HttpSecurity http, ActiveUserJwtConverter converter) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())   // bearer tokens only, no cookies
+                .cors(cors -> {})                // uses the corsConfigurationSource bean below
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/actuator/health").permitAll()
@@ -60,6 +65,24 @@ public class SecurityConfig {
                         .anyRequest().permitAll())
                 .oauth2ResourceServer(o -> o.jwt(jwt -> jwt.jwtAuthenticationConverter(converter)));
         return http.build();
+    }
+
+    /**
+     * The Flutter web build runs on its own origin during development (flutter run -d chrome),
+     * so /api/app/** answers cross-origin calls from mos.cors.app-origins. Bearer tokens only:
+     * no cookies, so credentials stay off. The dashboard is same-origin and gets no CORS.
+     */
+    @Bean
+    CorsConfigurationSource corsConfigurationSource(MosProperties properties) {
+        var app = new CorsConfiguration();
+        app.setAllowedOriginPatterns(properties.cors().appOrigins());
+        app.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        app.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept"));
+        app.setAllowCredentials(false);
+        app.setMaxAge(3600L);
+        var source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/api/app/**", app);
+        return source;
     }
 
     @Bean

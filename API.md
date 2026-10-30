@@ -166,8 +166,8 @@ Search parameters are `q`, `page`, `size`. Admins cannot deactivate themselves o
 
 Dates are inclusive store-local dates. Revenue includes orders placed in the period and excludes cancelled/rejected/pending-payment/abandoned orders; it is not a completed-only or settled-payment accounting ledger. The export endpoint returns an attachment, not JSON.
 
-## Flutter integration still required
+## Flutter integration
 
-Implement the existing repository interfaces against these routes, convert DTO IDs/enums/money/times, store the JWT securely, handle 401/403 and poll active orders/payments. Replace mock IDs with catalogue IDs and use per-product effective options/defaults from the API. A native device/emulator must reach the host's actual network address rather than its own `localhost`. Cross-origin Flutter Web hosting needs an explicit CORS policy; none has been enabled here.
+The Flutter app implements its repository interfaces against these routes in `lib/data/api/` (`ApiClient` plus `Api{Auth,Menu,Store,Order,Card}Repository`): lowercase enums, decimal money, UTC instants shown in local time, `HH:mm:ss` opening times. Backend error codes map to the app's `OrderFailure` (`ordering_paused`, `slot_unavailable`, `drink_unavailable`, `not_signed_in`); other errors show the backend `message`. The JWT is kept in memory for the app session. The tracking and KHQR pages poll as before.
 
-API tests and the real HTTP smoke prove the server-side contract, not a completed Flutter integration. See README for payment/recovery security limitations and unresolved SA decisions.
+Browser builds on another origin need CORS: `/api/app/**` allows `mos.cors.app-origins` (default `http://localhost:*`, `http://127.0.0.1:*`); `/api/admin/**` has no CORS. A native app is not subject to CORS but must reach the host's network address (`10.0.2.2` from the Android emulator). See README for payment/recovery security limitations and unresolved SA decisions.

@@ -37,14 +37,26 @@ public class DemoSeedService {
                               boolean soldOut, boolean inactive) {}
     public record Catalog(List<String> categories, List<DemoProduct> products) {}
 
+    static final String ADMIN_EMAIL = "admin@mos.test";
+    static final String STAFF_EMAIL = "staff@mos.test";
+
+    /**
+     * Adds the demo menu to a database that has no menu yet, plus each demo account that does not exist.
+     * Existing accounts (and their passwords) are never touched; a database that already has a menu is refused.
+     */
     @Transactional
     public void seed(String adminPassword, String staffPassword) {
-        if (users.count() != 0 || categories.count() != 0) {
-            throw new IllegalStateException("Demo seed requires an empty database; it never overwrites existing data.");
+        if (categories.count() != 0) {
+            throw new IllegalStateException("Demo seed needs a database without a menu; this one already has a menu, so nothing was changed.");
         }
-        // Validate both before any writes. Passwords are supplied at runtime, never logged.
-        if (adminPassword == null || staffPassword == null || adminPassword.length() < 8 || staffPassword.length() < 8) {
-            throw new IllegalArgumentException("Set both MOS_DEMO_ADMIN_PASSWORD and MOS_DEMO_STAFF_PASSWORD (8+ characters).");
+        boolean needAdmin = users.findByEmailIgnoreCase(ADMIN_EMAIL).isEmpty();
+        boolean needStaff = users.findByEmailIgnoreCase(STAFF_EMAIL).isEmpty();
+        // Validate before any writes. Passwords are supplied at runtime, never logged.
+        if (needAdmin && !strong(adminPassword)) {
+            throw new IllegalArgumentException("Set MOS_DEMO_ADMIN_PASSWORD (8+ characters) to create the demo admin.");
+        }
+        if (needStaff && !strong(staffPassword)) {
+            throw new IllegalArgumentException("Set MOS_DEMO_STAFF_PASSWORD (8+ characters) to create the demo staff account.");
         }
         Catalog catalog;
         try (var in = new ClassPathResource("demo/menu.json").getInputStream()) {
@@ -52,8 +64,8 @@ public class DemoSeedService {
         } catch (Exception e) {
             throw new IllegalStateException("Could not read demo/menu.json", e);
         }
-        accounts.createStaff(new StaffRequest("Vanna", "Chea", "admin@mos.test", null, UserRole.ADMIN, adminPassword));
-        accounts.createStaff(new StaffRequest("Sophea", "Lim", "staff@mos.test", null, UserRole.STAFF, staffPassword));
+        if (needAdmin) accounts.createStaff(new StaffRequest("Vanna", "Chea", ADMIN_EMAIL, null, UserRole.ADMIN, adminPassword));
+        if (needStaff) accounts.createStaff(new StaffRequest("Sophea", "Lim", STAFF_EMAIL, null, UserRole.STAFF, staffPassword));
         Map<String, Long> categoryIds = new LinkedHashMap<>();
         for (String name : catalog.categories()) {
             categoryIds.put(name, menu.createCategory(new CategoryRequest(name, categoryIds.size() + 1, true)).id());
@@ -96,6 +108,10 @@ public class DemoSeedService {
             choices.add(offer(groups.get("Add-ons"), null, optionIds, null, Map.of()));
             options.saveProductOptions(p.id(), new ProductOptionsRequest(choices));
         }
+    }
+
+    private static boolean strong(String password) {
+        return password != null && password.length() >= 8;
     }
 
     private void addGroup(Map<String, OptionGroupView> groups, Map<String, Long> ids, String name,
