@@ -19,7 +19,7 @@ import type { Order, Payment } from '@/lib/types'
  * refund as handed back. Opened from the records table and from the queue.
  */
 export default function OrderDetailSheet({ orderId, onClose }: { orderId: number; onClose: () => void }) {
-  const { data: order, isLoading } = useQuery({
+  const { data: order, isLoading, error } = useQuery({
     queryKey: ['admin-order', orderId],
     queryFn: () => api.get<Order>(`/api/admin/orders/${orderId}`)
   })
@@ -27,7 +27,7 @@ export default function OrderDetailSheet({ orderId, onClose }: { orderId: number
   return (
     <Sheet open onOpenChange={open => !open && onClose()}>
       <SheetContent className='w-full overflow-y-auto sm:max-w-md' aria-label='Order details'>
-        {isLoading || !order ? (
+        {error ? <div className='p-4'><SheetTitle>Order details</SheetTitle><p role='alert' className='text-destructive'>{errorMessage(error)}</p></div> : isLoading || !order ? (
           <div className='grid gap-3 p-4'>
             <Skeleton className='h-6 w-32' />
             <Skeleton className='h-24 w-full' />

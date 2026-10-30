@@ -23,7 +23,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { api } from '@/lib/api'
+import { api, errorMessage } from '@/lib/api'
 import { dateTime, money, ORDER_STATUS_LABEL, SOURCE_LABEL } from '@/lib/format'
 import type { Order, Page } from '@/lib/types'
 
@@ -45,7 +45,7 @@ export default function OrderRecordsPage() {
   const [openOrderId, setOpenOrderId] = useState<number | null>(null)
 
   const query = ordersQuery(filters)
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, error } = useQuery({
     queryKey: ['admin-orders', query],
     queryFn: () => api.get<Page<Order>>('/api/admin/orders', query)
   })
@@ -93,6 +93,7 @@ export default function OrderRecordsPage() {
   return (
     <>
       <PageTitle title='Order records' description='Every order the store has taken.' />
+      {error && <p role='alert' className='text-destructive'>{errorMessage(error)}</p>}
       <ListCard
         filters={
           <>

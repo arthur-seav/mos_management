@@ -14,9 +14,9 @@ import { Link } from 'react-router'
 
 import PageTitle from '@/components/common/PageTitle'
 import StatCard from '@/components/common/StatCard'
-import { Button } from '@/components/ui/button'
+import { buttonVariants } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { api } from '@/lib/api'
+import { api, errorMessage } from '@/lib/api'
 import { date, money } from '@/lib/format'
 import type { Overview } from '@/lib/types'
 
@@ -27,7 +27,7 @@ export function inProgressCount(overview: Overview): number {
 
 /** FR-42 / SA 7.4: what the store needs to know the moment the dashboard opens. Polled every 10 s. */
 export default function OverviewPage() {
-  const { data } = useQuery({
+  const { data, error } = useQuery({
     queryKey: ['overview'],
     queryFn: () => api.get<Overview>('/api/admin/overview'),
     refetchInterval: 10_000
@@ -40,24 +40,25 @@ export default function OverviewPage() {
         description={date(new Date().toISOString())}
         actions={
           <>
-            <Button variant='outline' render={<Link to='/orders/queue' />}>
+            <Link className={buttonVariants({ variant: 'outline' })} to='/orders/queue'>
               <ListChecksIcon />
               Open order queue
-            </Button>
-            <Button render={<Link to='/orders/new' />}>
+            </Link>
+            <Link className={buttonVariants()} to='/orders/new'>
               <PlusIcon />
               New walk-in order
-            </Button>
+            </Link>
           </>
         }
       />
-      {!data ? (
+      {error && <p role='alert' className='text-destructive'>Overview could not refresh: {errorMessage(error)}</p>}
+      {!data && !error ? (
         <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-4'>
           {Array.from({ length: 4 }, (_, i) => (
             <Skeleton key={i} className='h-28 w-full' />
           ))}
         </div>
-      ) : (
+      ) : data ? (
         <div className='grid gap-4'>
           <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-4'>
             <StatCard icon={ClipboardListIcon} value={data.ordersToday} label='Orders today' />
@@ -104,7 +105,7 @@ export default function OverviewPage() {
             />
           </div>
         </div>
-      )}
+      ) : null}
     </>
   )
 }

@@ -77,6 +77,12 @@ function section(title: string): HTMLElement {
 }
 
 describe('OrderDetailSheet (FR-32, FR-33)', () => {
+  it('reports a failed detail request', async () => {
+    fakeApi({ 'GET /api/admin/orders/7': () => apiError(404, 'not_found', 'Order not found.') })
+    renderPage(<OrderDetailSheet orderId={7} onClose={() => {}} />)
+    expect(await screen.findByRole('alert')).toHaveTextContent('Order not found.')
+  })
+
   it('shows the order, its drinks, its total and its payment', async () => {
     fakeApi({ 'GET /api/admin/orders/7': order })
     renderPage(<OrderDetailSheet orderId={7} onClose={() => {}} />)

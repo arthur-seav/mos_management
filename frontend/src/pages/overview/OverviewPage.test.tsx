@@ -1,7 +1,8 @@
 import { act, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 
 import OverviewPage, { inProgressCount } from '@/pages/overview/OverviewPage'
-import { fakeApi, renderPage, STAFF } from '@/test/render'
+import { apiError, fakeApi, renderPage, STAFF } from '@/test/render'
 import type { Overview } from '@/lib/types'
 
 const busy: Overview = {
@@ -47,6 +48,19 @@ afterEach(() => {
 })
 
 describe('OverviewPage (FR-42, SA 7.4)', () => {
+  it('navigates to the queue screen rather than only pointing at a URL', async () => {
+    fakeApi({ 'GET /api/admin/overview': busy })
+    renderPage(<OverviewPage />, { path: '/', routes: [{ path: '/orders/queue', element: <h1>Queue destination</h1> }] })
+    await userEvent.click(screen.getByRole('link', { name: 'Open order queue' }))
+    expect(await screen.findByRole('heading', { name: 'Queue destination' })).toBeInTheDocument()
+  })
+
+  it('reports a failed overview instead of leaving a permanent skeleton', async () => {
+    fakeApi({ 'GET /api/admin/overview': () => apiError(503, 'unavailable', 'Overview is offline.') })
+    renderPage(<OverviewPage />)
+    expect(await screen.findByRole('alert')).toHaveTextContent('Overview is offline.')
+  })
+
   it('shows the store-local day and today’s numbers to an admin', async () => {
     fakeApi({ 'GET /api/admin/overview': busy })
     renderPage(<OverviewPage />, { path: '/' })
