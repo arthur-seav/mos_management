@@ -42,7 +42,7 @@ def main():
         except HTTPError as error:
             response = error
         raw = response.read()
-        code = response.getcode()
+        code = int(response.getcode() or 0)
         assert code == status, (method, path, code, raw[:500] if code >= 400 else 'unexpected status')
         return json.loads(raw) if 'json' in response.headers.get('Content-Type', '') else raw
 
