@@ -2,7 +2,7 @@
 
 Spring Boot API and React store dashboard for the MOS coffee-shop coursework (SV34 Mobile Application II, SA 2.0). Staff handle online and walk-in orders; admins also manage the menu, options, accounts, reports and store settings. The same back end exposes `/api/app` for the separate Flutter customer app.
 
-**Scope:** the dashboard calls the real API. The Flutter repository has not yet been switched from its mock repositories to this API. Payments and password recovery are demonstrations, not production integrations.
+**Scope:** the dashboard calls the real API. The Flutter customer app (`arthur-seav/mos_flutter`, branch `feature/api-integration`) calls `/api/app` by default; orders placed in the app appear in the dashboard queue and status changes made there reach the app. Payments and password recovery are demonstrations, not production integrations.
 
 ## Requirements
 
@@ -153,7 +153,7 @@ AdminCN's MIT component notice is preserved in `frontend/src/components/ui/LICEN
 
 - **No live banking:** `SimulatedPaymentGateway` is the only implementation, regardless of `MOS_DEMO`. KHQR succeeds after roughly 5 seconds when polled and expires after 5 minutes. Cards ending in `0002` are declined. Never scan/pay the demo payload or submit real card data. Refund marking records a staff action; it does not transfer money.
 - **Password recovery is demo-only:** phone matching issues a reset ticket without SMS/OTP or verified delivery. It is unsafe for an Internet-facing account system. Real recovery, rate limiting and a payment-provider integration are required before production use.
-- **Flutter is not connected yet:** the API has been exercised through real HTTP; the Flutter app still needs `Api*Repository` implementations and device/network testing. Cross-origin browser hosting is not configured; the dashboard is intended to share the Spring Boot origin.
+- **Flutter integration:** done for the Flutter web build and the API (see VERIFICATION.md, "Cross-end with the Flutter app"). Not yet run on an Android emulator or phone by Hermes (no Android SDK on that machine): the emulator uses `http://10.0.2.2:8080`, a phone `--dart-define=MOS_API_URL=http://<LAN IP>:8080`. Cross-origin calls to `/api/app/**` are allowed from `localhost`/`127.0.0.1` only (`MOS_CORS_APP_ORIGINS` to add a hosted Flutter web origin).
 - **BR-07:** backend default scheduled lead time is 30 minutes. The settings accept 0–240 and warn below 30; the Flutter mock currently uses 5. Whether to enforce a hard 30-minute minimum or retain an intentional deviation needs Arthur's decision. Current seed stays at 30.
 - **BR-10 / FR-33:** cancelling/rejecting a paid order automatically marks `refund_pending`; staff mark the actual refund `refunded` afterward.
 - **BR-12:** overdue Ready orders are highlighted, never automatically completed.

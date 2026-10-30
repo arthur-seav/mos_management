@@ -49,9 +49,17 @@ Actual browser interactions included:
 
 Browser route ledgers, selected screenshots and the downloaded workbook were saved under the local ignored `target/browser-evidence/` directory. The browser checks above were executed interactively through browser automation; they are not a committed Playwright suite. The repeatable real HTTP test is `scripts/smoke.py`.
 
+## Cross-end with the Flutter app (2026-10-30)
+
+Flutter `feature/api-integration` against this backend (`feature/flutter-integration`, a seeded throwaway database):
+
+- `flutter test test/live --tags live` (app repositories against the real server): sign-up, TC-14 order at **$9.20**, simulated KHQR paid, order in the shared queue, staff Confirm + Start preparing through the dashboard API, the app reads **Preparing**, cancel refused after confirmation (TC-26), staff pause makes the app's order fail with `orderingPaused` (TC-20). PASS.
+- Flutter **web** build in a browser (origin `127.0.0.1:8094`, API `127.0.0.1:8092`, so CORS was exercised): the menu showed a price changed only in the database ($3.10, not the mock's $2.50); sign-in; Americano customization used the backend's per-drink sizes (−$0.25 / +$0.25) and defaults, cart **$3.35**; checkout showed the backend's opening hours; KHQR paid, pickup code **A005**. In the dashboard queue A005 appeared as an online order for that customer; Confirm and Start preparing were clicked there; the app's Orders tab then showed **#A005 · Preparing · $3.35**.
+- Backend: 87 tests (CORS 3: localhost origin allowed, other sites refused, dashboard API without CORS; seed top-up 1). Flutter: 357 tests (24 on recorded backend responses); mutants caught 2/2 backend, 4/4 Flutter.
+
 ## Explicitly not verified or not implemented
 
-- Flutter calling this server: repository adapters/device testing still required.
+- The Flutter app on an Android emulator or a real phone (verified only as a web build; Android cleartext and emulator address are configured but not run here).
 - Live KHQR/card settlement, actual money refunds, SMS/email/push delivery.
 - Production deployment, penetration testing, hardening or public-service readiness.
 - Hard enforcement of SA BR-07's 30-minute minimum: current default is 30, settings permit lower values with a warning; this remains a documented decision for Arthur.
