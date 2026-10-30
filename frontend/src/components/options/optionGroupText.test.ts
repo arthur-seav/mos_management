@@ -42,6 +42,9 @@ describe('extraPriceLabel', () => {
 })
 
 describe('summaryHint', () => {
+  it('does not append a noun already present in the option name', () => {
+    expect(summaryHint({ summaryNoun: 'sugar', options: [option({ name: 'No sugar' })] })).toBe('Shown as "No sugar"')
+  })
   it('is null without a summary noun', () => {
     expect(summaryHint({ summaryNoun: null, options: [option()] })).toBeNull()
     expect(summaryHint({ summaryNoun: '  ', options: [option()] })).toBeNull()

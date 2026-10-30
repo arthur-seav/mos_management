@@ -18,7 +18,8 @@ export function summaryHint(group: Pick<OptionGroup, 'summaryNoun' | 'options'>)
   const noun = group.summaryNoun?.trim()
   if (!noun) return null
   const first = sortOptions(group.options)[0]
-  return first ? `Shown as "${first.name} ${noun}"` : `Shown after the option name: "… ${noun}"`
+  const label = first?.name.toLowerCase().includes(noun.toLowerCase()) ? first.name : `${first?.name} ${noun}`
+  return first ? `Shown as "${label}"` : `Shown after the option name: "… ${noun}"`
 }
 
 /** The order the customer app shows groups in: sortOrder first, then name so the list never jumps. */

@@ -5,19 +5,6 @@ import ProductEditPage from '@/pages/menu/ProductEditPage'
 import { apiError, fakeApi, json, renderPage } from '@/test/render'
 import type { Category, Product, ProductGroupSetting, ProductOptionsView } from '@/lib/types'
 
-// jsdom 26 has no PointerEvent; base-ui's Switch dispatches one when clicked.
-class PointerEventShim extends MouseEvent {}
-Object.defineProperty(window, 'PointerEvent', { value: PointerEventShim, configurable: true })
-
-// jsdom's AbortSignal is not Node's, so react-router's `new Request(url, {signal})`
-// throws while navigating after a save. Drop the signal: no route here loads data.
-const RealRequest = globalThis.Request
-class RequestWithoutSignal extends RealRequest {
-  constructor(input: RequestInfo | URL, init: RequestInit = {}) {
-    super(input, { ...init, signal: undefined })
-  }
-}
-Object.defineProperty(globalThis, 'Request', { value: RequestWithoutSignal, configurable: true })
 
 const coffee: Category = { id: 1, name: 'Coffee', sortOrder: 1, active: true, productCount: 2 }
 const tea: Category = { id: 2, name: 'Tea', sortOrder: 2, active: true, productCount: 1 }

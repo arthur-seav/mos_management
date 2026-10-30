@@ -68,7 +68,7 @@ describe('StoreSettingsPage (FR-36, FR-37, FR-40, FR-41)', () => {
     renderPage(<StoreSettingsPage />, { path: '/store', user: STAFF })
 
     expect(await screen.findByRole('button', { name: 'Pause online orders' })).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: /^Save/ })).not.toBeInTheDocument()
+    expect(screen.queryAllByRole('button', { name: /^Save/ })).toHaveLength(0)
     expect(screen.getByLabelText('Store name')).toBeDisabled()
     expect(screen.getByLabelText('Slot interval (minutes)')).toBeDisabled()
     expect(screen.getByLabelText('Monday opening time')).toBeDisabled()

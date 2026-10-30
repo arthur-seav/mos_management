@@ -5,18 +5,6 @@ import OrderRecordsPage from '@/pages/orders/OrderRecordsPage'
 import { fakeApi, renderPage } from '@/test/render'
 import type { Order, Page, Payment } from '@/lib/types'
 
-/**
- * React Router builds a Request per navigation and jsdom's AbortSignal is not the
- * one Node's Request accepts, so every in-app navigation (here: the filters that
- * live in the URL) would be swallowed. This belongs in src/test/setup.ts.
- */
-const NativeRequest = globalThis.Request
-class RequestWithoutSignal extends NativeRequest {
-  constructor(input: RequestInfo | URL, init?: RequestInit) {
-    super(input, init?.signal ? { ...init, signal: undefined } : init)
-  }
-}
-globalThis.Request = RequestWithoutSignal as typeof Request
 
 const paid: Payment = {
   id: 51,

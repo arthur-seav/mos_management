@@ -6,7 +6,7 @@ import OnlineOrderingCard from '@/components/store/OnlineOrderingCard'
 import PickupRulesCard from '@/components/store/PickupRulesCard'
 import StoreInfoCard from '@/components/store/StoreInfoCard'
 import { Skeleton } from '@/components/ui/skeleton'
-import { api } from '@/lib/api'
+import { api, errorMessage } from '@/lib/api'
 import { useAuth } from '@/lib/auth'
 import type { StoreInfo } from '@/lib/types'
 
@@ -16,7 +16,7 @@ import type { StoreInfo } from '@/lib/types'
  */
 export default function StoreSettingsPage() {
   const { isAdmin } = useAuth()
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, error } = useQuery({
     queryKey: ['store'],
     queryFn: () => api.get<StoreInfo>('/api/admin/store')
   })
@@ -31,7 +31,7 @@ export default function StoreSettingsPage() {
             : 'Pause or resume online orders. The rest is for admins.'
         }
       />
-      {isLoading || !data ? (
+      {error ? <p role='alert' className='text-destructive'>{errorMessage(error)}</p> : isLoading || !data ? (
         <Skeleton className='h-40 w-full' />
       ) : (
         <div className='grid gap-6'>
