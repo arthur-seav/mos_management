@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.hamcrest.Matchers.containsString;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 class DemoSeedTest extends ApiTest {
@@ -47,6 +49,39 @@ class DemoSeedTest extends ApiTest {
         var latteSize = customization("Latte").groups().getFirst();
         assertThat(latteSize.options().stream().filter(o -> o.name().equals("Large")).findFirst().orElseThrow().extraPrice()).isEqualByComparingTo("1.00");
         assertThat(customization("Matcha Frappé").groups().stream().map(g -> g.name())).doesNotContain("Temperature").contains("Ice level");
+    }
+
+    /** Every demo drink shows its photo: a bundled JPEG served at /demo-images/. */
+    @Test
+    void everyDemoDrinkGetsItsBundledPhoto() throws Exception {
+        seed.seed(PASSWORD, PASSWORD);
+        assertThat(menu.products()).hasSize(18).allSatisfy(p -> assertThat(p.imageUrl()).startsWith("/demo-images/").endsWith(".jpg"));
+        var hotChocolate = menu.products().stream().filter(p -> p.name().equals("Hot Chocolate")).findFirst().orElseThrow();
+        assertThat(hotChocolate.imageUrl()).isEqualTo("/demo-images/hot-chocolate.jpg");
+        assertThat(menu.products().stream().map(p -> p.imageUrl()).distinct()).hasSize(18);
+        for (var p : menu.products()) {
+            byte[] body = mvc.perform(get(p.imageUrl()))
+                    .andExpect(status().isOk())
+                    .andExpect(content().contentType("image/jpeg"))
+                    .andExpect(header().string("Cache-Control", containsString("max-age=86400")))
+                    .andReturn().getResponse().getContentAsByteArray();
+            assertThat(body.length).as(p.name()).isBetween(10_000, 400_000);
+            assertThat(new byte[]{body[0], body[1]}).as(p.name() + " is a JPEG").containsExactly(0xFF, 0xD8);
+        }
+    }
+
+    @Test
+    void aMissingPhotoIsNotFoundRatherThanTheDashboardPage() throws Exception {
+        mvc.perform(get("/demo-images/nope.jpg")).andExpect(status().isNotFound());
+    }
+
+    @Test
+    void flutterWebMayLoadPhotosFromItsDevOrigin() throws Exception {
+        mvc.perform(get("/demo-images/latte.jpg").header("Origin", "http://localhost:53117"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Access-Control-Allow-Origin", "http://localhost:53117"));
+        mvc.perform(get("/demo-images/latte.jpg").header("Origin", "https://evil.example"))
+                .andExpect(status().isForbidden());
     }
 
     @Test

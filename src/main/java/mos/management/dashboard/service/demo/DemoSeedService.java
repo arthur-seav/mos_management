@@ -33,10 +33,13 @@ public class DemoSeedService {
         this.menu = menu; this.options = options; this.mapper = mapper;
     }
 
+    /** {@code image}: a file in classpath:/demo/images/, served at {@link #IMAGE_PATH}. */
     public record DemoProduct(String name, String category, BigDecimal price, String description,
-                              boolean soldOut, boolean inactive) {}
+                              boolean soldOut, boolean inactive, String image) {}
     public record Catalog(List<String> categories, List<DemoProduct> products) {}
 
+    /** URL prefix of the bundled demo photos (WebConfig maps it to classpath:/demo/images/). */
+    public static final String IMAGE_PATH = "/demo-images/";
     static final String ADMIN_EMAIL = "admin@mos.test";
     static final String STAFF_EMAIL = "staff@mos.test";
 
@@ -64,6 +67,11 @@ public class DemoSeedService {
         } catch (Exception e) {
             throw new IllegalStateException("Could not read demo/menu.json", e);
         }
+        for (DemoProduct d : catalog.products()) {
+            if (d.image() == null || !new ClassPathResource("demo/images/" + d.image()).exists()) {
+                throw new IllegalStateException("Missing demo photo for " + d.name() + ": demo/images/" + d.image());
+            }
+        }
         if (needAdmin) accounts.createStaff(new StaffRequest("Vanna", "Chea", ADMIN_EMAIL, null, UserRole.ADMIN, adminPassword));
         if (needStaff) accounts.createStaff(new StaffRequest("Sophea", "Lim", STAFF_EMAIL, null, UserRole.STAFF, staffPassword));
         Map<String, Long> categoryIds = new LinkedHashMap<>();
@@ -88,7 +96,8 @@ public class DemoSeedService {
         // Re-read group DTOs after adding options (the create response precedes them).
         options.groups().forEach(g -> groups.put(g.name(), g));
         for (DemoProduct d : catalog.products()) {
-            ProductView p = menu.createProduct(new ProductRequest(categoryIds.get(d.category()), d.name(), d.description(), "", d.price(), !d.inactive()));
+            ProductView p = menu.createProduct(new ProductRequest(categoryIds.get(d.category()), d.name(), d.description(),
+                    IMAGE_PATH + d.image(), d.price(), !d.inactive()));
             if (d.soldOut()) menu.setAvailable(p.id(), false);
             boolean espresso = d.name().equals("Espresso");
             boolean coldOnly = Set.of("Caramel Frappé", "Mocha Frappé", "Matcha Frappé", "Strawberry Milk", "Lemon Soda").contains(d.name());

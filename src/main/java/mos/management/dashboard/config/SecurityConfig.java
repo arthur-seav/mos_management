@@ -82,6 +82,13 @@ public class SecurityConfig {
         app.setMaxAge(3600L);
         var source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/api/app/**", app);
+        // Flutter web draws pictures through fetch, so the photos need CORS too (read only).
+        var images = new CorsConfiguration();
+        images.setAllowedOriginPatterns(properties.cors().appOrigins());
+        images.setAllowedMethods(List.of("GET", "HEAD", "OPTIONS"));
+        images.setMaxAge(3600L);
+        source.registerCorsConfiguration("/demo-images/**", images);
+        source.registerCorsConfiguration("/uploads/**", images);
         return source;
     }
 
