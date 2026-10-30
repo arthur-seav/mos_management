@@ -30,7 +30,7 @@ const SHOWN_CODES = ['empty_group', 'bad_default', 'bad_option', 'bad_group']
  * default, and the drink's own price for an option (TC-14, TC-15).
  */
 export default function ProductOptionsCard({ productId }: { productId: number }) {
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, error } = useQuery({
     queryKey: ['product-options', productId],
     queryFn: () => api.get<ProductOptionsView>(`/api/admin/products/${productId}/options`)
   })
@@ -43,7 +43,7 @@ export default function ProductOptionsCard({ productId }: { productId: number })
           Pick the groups this drink offers. An empty price box means the group's own price.
         </CardDescription>
       </CardHeader>
-      {isLoading || !data ? (
+      {error ? <CardContent><p role='alert' className='text-destructive'>{errorMessage(error)}</p></CardContent> : isLoading || !data ? (
         <CardContent className='grid gap-3'>
           <Skeleton className='h-5 w-48' />
           <Skeleton className='h-5 w-64' />

@@ -52,7 +52,7 @@ export default function ProductEditPage() {
     queryKey: ['categories'],
     queryFn: () => api.get<Category[]>('/api/admin/categories')
   })
-  const { data: product, isLoading } = useQuery({
+  const { data: product, isLoading, error } = useQuery({
     queryKey: ['product', productId],
     queryFn: () => api.get<Product>(`/api/admin/products/${productId}`),
     enabled: productId !== null
@@ -75,7 +75,7 @@ export default function ProductEditPage() {
           productId === null ? 'A new drink starts off the menu until you put it on.' : 'Details, picture and options.'
         }
       />
-      {loading ? (
+      {error ? <p role='alert' className='text-destructive'>{errorMessage(error)}</p> : loading ? (
         <Card>
           <CardContent className='grid gap-3'>
             <Skeleton className='h-5 w-40' />

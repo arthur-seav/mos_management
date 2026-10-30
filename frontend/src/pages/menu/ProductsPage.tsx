@@ -32,7 +32,7 @@ export default function ProductsPage() {
   const [status, setStatus] = useState<ProductStatusFilter>('all')
   const [search, setSearch] = useState('')
 
-  const { data: products = [], isLoading } = useQuery({
+  const { data: products = [], isLoading, error } = useQuery({
     queryKey: ['products'],
     queryFn: () => api.get<Product[]>('/api/admin/products')
   })
@@ -122,6 +122,7 @@ export default function ProductsPage() {
   return (
     <>
       <PageTitle title='Drinks' description='Everything on the menu, with its price and whether it is on sale today.' />
+      {error && <p role='alert' className='text-destructive'>{errorMessage(error)}</p>}
       <ListCard
         filters={
           <>

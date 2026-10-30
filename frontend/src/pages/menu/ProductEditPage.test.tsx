@@ -85,6 +85,12 @@ function renderEditor() {
 }
 
 describe('ProductEditPage details (FR-25)', () => {
+  it('reports a missing drink instead of loading forever', async () => {
+    fakeApi({ ...editRoutes, 'GET /api/admin/products/4': () => apiError(404, 'not_found', 'Drink not found.') })
+    renderEditor()
+    expect(await screen.findByRole('alert')).toHaveTextContent('Drink not found.')
+  })
+
   it('fills the form with the drink the server sent', async () => {
     fakeApi(editRoutes)
     renderEditor()
