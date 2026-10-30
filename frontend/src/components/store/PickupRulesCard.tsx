@@ -25,7 +25,6 @@ export default function PickupRulesCard({ settings, canEdit }: { settings: Store
   const {
     register,
     handleSubmit,
-    watch,
     formState: { errors }
   } = useForm<z.input<typeof schema>, unknown, Form>({
     resolver: zodResolver(schema),
@@ -56,7 +55,6 @@ export default function PickupRulesCard({ settings, canEdit }: { settings: Store
     onError: e => toast.error(errorMessage(e))
   })
 
-  const minPrep = Number(watch('minPrepMin'))
 
   return (
     <SettingsCard
@@ -91,14 +89,9 @@ export default function PickupRulesCard({ settings, canEdit }: { settings: Store
           id='minPrepMin'
           label='Minimum prep time for scheduled pickup (minutes)'
           error={errors.minPrepMin?.message}
-          hint='SA rule BR-07 says at least 30 minutes.'
+          hint='How far ahead a customer must schedule a pickup.'
         >
           <Input id='minPrepMin' type='number' min={0} max={240} disabled={!canEdit} {...register('minPrepMin')} />
-          {Number.isFinite(minPrep) && minPrep < 30 && (
-            <p className='text-mocha text-xs' role='status'>
-              Under 30 minutes breaks BR-07.
-            </p>
-          )}
         </FormField>
         <FormField
           id='asapPrepMin'
@@ -112,7 +105,7 @@ export default function PickupRulesCard({ settings, canEdit }: { settings: Store
           id='pickupTimeoutMin'
           label='Pickup timeout (minutes)'
           error={errors.pickupTimeoutMin?.message}
-          hint='Orders waiting in Ready longer than this are flagged in the queue (BR-12).'
+          hint='Orders waiting in Ready longer than this are flagged in the queue.'
         >
           <Input
             id='pickupTimeoutMin'

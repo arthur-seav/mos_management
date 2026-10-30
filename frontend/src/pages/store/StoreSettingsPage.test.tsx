@@ -51,8 +51,8 @@ describe('StoreSettingsPage (FR-36, FR-37, FR-40, FR-41)', () => {
     expect(screen.getByLabelText('Monday opening time')).toHaveValue('07:00')
     expect(screen.getByLabelText('Saturday closing time')).toHaveValue('21:00')
     expect(screen.getByText(/The last pickup slot is 60 minutes before closing/)).toBeInTheDocument()
-    expect(screen.getByText('SA rule BR-07 says at least 30 minutes.')).toBeInTheDocument()
-    expect(screen.getByText(/flagged in the queue \(BR-12\)/)).toBeInTheDocument()
+    expect(screen.getByText('How far ahead a customer must schedule a pickup.')).toBeInTheDocument()
+    expect(screen.getByText('Orders waiting in Ready longer than this are flagged in the queue.')).toBeInTheDocument()
   })
 
   it('a closed day keeps its time inputs switched off', async () => {
@@ -160,7 +160,7 @@ describe('StoreSettingsPage (FR-36, FR-37, FR-40, FR-41)', () => {
     })
   })
 
-  it('warns when the minimum prep time drops under the 30 minutes BR-07 asks for', async () => {
+  it('shows no references to the SA document or its rule numbers, even for a short prep time', async () => {
     fakeApi({ 'GET /api/admin/store': info })
     renderPage(<StoreSettingsPage />)
 
@@ -168,7 +168,8 @@ describe('StoreSettingsPage (FR-36, FR-37, FR-40, FR-41)', () => {
     await userEvent.clear(field)
     await userEvent.type(field, '15')
 
-    expect(screen.getByText('Under 30 minutes breaks BR-07.')).toBeInTheDocument()
+    expect(field).toHaveValue(15)
+    expect(document.body.textContent).not.toMatch(/\bSA\b|\b(BR|FR|TC|NFR)-\d+/)
   })
 
   it('saving the hours sends all seven days in HH:mm, with no times on a closed day (FR-37)', async () => {
