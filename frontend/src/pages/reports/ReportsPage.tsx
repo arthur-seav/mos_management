@@ -85,7 +85,7 @@ export default function ReportsPage() {
       {report ? (
         <div className='grid gap-6'>
           <div className='grid gap-4 sm:grid-cols-2 xl:grid-cols-5'>
-            <StatCard icon={DollarSignIcon} value={money(report.revenue)} label='Revenue' note='Paid and completed.' />
+            <StatCard icon={DollarSignIcon} value={money(report.revenue)} label='Revenue' note='Non-cancelled orders placed in the period.' />
             <StatCard icon={ReceiptIcon} value={report.orders} label='Orders' note='Orders that reached staff.' />
             <StatCard icon={CupSodaIcon} value={report.drinks} label='Drinks sold' note='Cups across all orders.' />
             <StatCard
@@ -104,7 +104,7 @@ export default function ReportsPage() {
           </div>
           <RevenueByDayChart byDay={report.byDay} />
           <SourceSplit bySource={report.bySource} />
-          <BestSellersTable bestSellers={bestSellers.data ?? []} />
+          {bestSellers.isError ? <p role='alert' className='text-destructive'>{errorMessage(bestSellers.error)}</p> : <BestSellersTable bestSellers={bestSellers.data ?? []} />}
         </div>
       ) : (
         !sales.isError && (

@@ -62,8 +62,9 @@ export function matchingQuickRange(period: DatePeriod, today: string): QuickRang
 
 /** Reads ?from=&to= off the URL, falling back to the API's own default period. */
 export function periodFromParams(from: string | null, to: string | null, today: string): DatePeriod {
-  const fallback = quickPeriod(DEFAULT_RANGE, today)
-  return { from: from ?? fallback.from, to: to ?? fallback.to }
+  const end = to || today
+  const fallback = quickPeriod(DEFAULT_RANGE, /^\d{4}-\d{2}-\d{2}$/.test(end) ? end : today)
+  return { from: from || fallback.from, to: end }
 }
 
 /** How many days the period covers, both ends included; 0 if it runs backwards. */

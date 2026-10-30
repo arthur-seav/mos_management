@@ -67,7 +67,7 @@ describe('periodFromParams', () => {
 
   it('fills in only the missing end', () => {
     expect(periodFromParams('2026-09-01', null, FRIDAY)).toEqual({ from: '2026-09-01', to: '2026-10-30' })
-    expect(periodFromParams(null, '2026-09-30', FRIDAY)).toEqual({ from: '2026-10-24', to: '2026-09-30' })
+    expect(periodFromParams(null, '2026-09-30', FRIDAY)).toEqual({ from: '2026-09-24', to: '2026-09-30' })
   })
 })
 

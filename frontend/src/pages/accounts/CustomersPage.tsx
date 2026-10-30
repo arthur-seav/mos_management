@@ -13,7 +13,7 @@ import PageTitle from '@/components/common/PageTitle'
 import { FlagBadge } from '@/components/common/StatusBadge'
 import TablePagination from '@/components/common/TablePagination'
 import { Button } from '@/components/ui/button'
-import { api } from '@/lib/api'
+import { api, errorMessage } from '@/lib/api'
 import { date } from '@/lib/format'
 import { fullName, type Page, type User } from '@/lib/types'
 
@@ -32,7 +32,7 @@ export default function CustomersPage() {
   const q = useDebouncedValue(search, SEARCH_DELAY_MS)
   useEffect(() => setPage(0), [q])
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, error } = useQuery({
     queryKey: ['customers', q, page],
     queryFn: () => api.get<Page<User>>('/api/admin/customers', { q, page, size: PAGE_SIZE })
   })
@@ -79,6 +79,7 @@ export default function CustomersPage() {
   return (
     <>
       <PageTitle title='Customers' description='People who order in the app. They sign themselves up.' />
+      {error && <p role='alert' className='text-destructive'>{errorMessage(error)}</p>}
       <ListCard
         search={{ value: search, onChange: setSearch, placeholder: 'Search name, email or phone' }}
         footer={

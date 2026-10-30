@@ -23,7 +23,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
-import { api } from '@/lib/api'
+import { api, errorMessage } from '@/lib/api'
 import { useAuth } from '@/lib/auth'
 import { date } from '@/lib/format'
 import { fullName, type Page, type User } from '@/lib/types'
@@ -46,7 +46,7 @@ export default function StaffPage() {
   const q = useDebouncedValue(search, SEARCH_DELAY_MS)
   useEffect(() => setPage(0), [q])
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, error } = useQuery({
     queryKey: ['staff', q, page],
     queryFn: () => api.get<Page<User>>('/api/admin/staff', { q, page, size: PAGE_SIZE })
   })
@@ -113,6 +113,7 @@ export default function StaffPage() {
   return (
     <>
       <PageTitle title='Staff' description='Who can sign in to the dashboard, and what they are allowed to do.' />
+      {error && <p role='alert' className='text-destructive'>{errorMessage(error)}</p>}
       <ListCard
         search={{ value: search, onChange: setSearch, placeholder: 'Search name, email or phone' }}
         actions={
