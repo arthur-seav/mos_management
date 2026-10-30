@@ -63,6 +63,8 @@ psql -v ON_ERROR_STOP=1 -d <same database> -f database/seed.sql
 
 They use plain `INSERT`s (pgAdmin's Query Tool can run them) and avoid PostgreSQL-17-only statements. A database loaded this way has no Flyway history, so point the app at a Flyway-built database instead. Regenerate after changing a migration or `demo/menu.json` (needs Docker and `./mvnw package`): `python3 scripts/export-sql.py`. The script builds a throwaway database, dumps it, re-imports both files as a non-superuser to prove they load, then drops everything it created.
 
+**Product photos.** The 18 demo drinks have photos in `src/main/resources/demo/images/` (one JPEG per drink, about 100 KB, 800 px wide, made from the originals in `SV34/.../MOS/database/images/`). They ship inside the jar and are served at `/demo-images/<drink>.jpg`; the seed (both `--mos.demo.seed=true` and `database/seed.sql`) stores that path as the drink's `image_url`, so the dashboard and the Flutter app show the same picture. A photo uploaded in the dashboard's product page replaces it with an `/uploads/...` file. To change a demo photo, replace the JPEG with the same name (keep it small: 800 px, quality ~80) and re-run `scripts/export-sql.py`.
+
 ### Configuration
 
 Spring imports `.env` from the **current working directory**; real process environment variables take precedence. Start the jar from the repository root, or supply the variables through your service manager.
@@ -93,7 +95,7 @@ npm --prefix frontend test
 # Local-tool safety tests (Python standard library only):
 python3 scripts/test_local_tools.py
 
-# Vite dev server; /api and /uploads are proxied to localhost:8080.
+# Vite dev server; /api, /uploads and /demo-images are proxied to localhost:8080.
 npm --prefix frontend run dev
 ```
 
